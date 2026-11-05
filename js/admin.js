@@ -4,7 +4,11 @@
  * GitHub REST API Commits, Dynamic QR Studio, and Live Checkpoints Modal.
  */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  if (window.APP_CONFIG && typeof window.APP_CONFIG.loadEnv === "function") {
+    await window.APP_CONFIG.loadEnv();
+  }
+
   // ----------------------------------------------------
   // 1. Cache ALL DOM Elements FIRST (Prevents any TDZ ReferenceErrors)
   // ----------------------------------------------------

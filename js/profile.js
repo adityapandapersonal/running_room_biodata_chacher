@@ -252,7 +252,7 @@ async function generateOfficialVectorPdf(p, id) {
   doc.text("SOUTH EAST CENTRAL RAILWAY (SECR)", pw / 2, m + 7, { align: "center" });
   doc.setFontSize(13);
   doc.setTextColor(56, 189, 248); // Cyan
-  doc.text("RUNNING ROOM DONGARGARH", pw / 2, m + 14, { align: "center" });
+  doc.text("RUNNING ROOM CHACHER", pw / 2, m + 14, { align: "center" });
 
   // 3. Document Title Bar
   doc.setFillColor(241, 245, 249);
@@ -463,7 +463,7 @@ async function generateOfficialVectorPdf(p, id) {
   doc.setTextColor(5, 150, 105);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
-  doc.text("DGG Running Room Verified Detailed", leftTextX, bottomBoxY + 7.5);
+  doc.text("CHCR Running Room Verified Detailed", leftTextX, bottomBoxY + 7.5);
 
   doc.setTextColor(71, 85, 105);
   doc.setFont("helvetica", "normal");
@@ -471,7 +471,7 @@ async function generateOfficialVectorPdf(p, id) {
   doc.text("Official Attestation & Digital Registry Record", leftTextX, bottomBoxY + 13, { maxWidth: maxAttestW });
   doc.text("This biodata record has been officially verified and", leftTextX, bottomBoxY + 18.5, { maxWidth: maxAttestW });
   doc.text("registered in Running Room System.", leftTextX, bottomBoxY + 23, { maxWidth: maxAttestW });
-  doc.text("SECR Dongargarh (Railway Administration)", leftTextX, bottomBoxY + 28, { maxWidth: maxAttestW });
+  doc.text("SECR Chacher (Railway Administration)", leftTextX, bottomBoxY + 28, { maxWidth: maxAttestW });
   doc.setFont("helvetica", "bold");
   doc.text(`Generated: ${new Date().toLocaleDateString("en-GB")}`, leftTextX, bottomBoxY + 38);
 
@@ -525,12 +525,12 @@ async function generateOfficialVectorPdf(p, id) {
   doc.setTextColor(148, 163, 184);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
-  doc.text("Official Document - Running Room Dongargarh (SECR) | M/s DREAMZ INDIA HOSPITALITY, New Delhi", pw / 2, ph - 4, { align: "center" });
+  doc.text("Official Document - Running Room Chacher (SECR) | M/s DREAMZ INDIA HOSPITALITY, New Delhi", pw / 2, ph - 4, { align: "center" });
 
   // 7. Save File Directly
   const rawName = p.fullName || "Employee";
   const cleanName = rawName.trim().replace(/[^a-zA-Z0-9_\-\s]/g, "").replace(/\s+/g, "_") || "Employee";
-  const fileName = `${cleanName}_DGG_Contractor_Staff_Biodata.pdf`;
+  const fileName = `${cleanName}_CHCR_Contractor_Staff_Biodata.pdf`;
   doc.save(fileName);
 }
 

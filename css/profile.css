@@ -683,7 +683,7 @@
   text-align: center;
 }
 
-.dgg-verified-banner {
+.chcr-verified-banner {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -699,13 +699,13 @@
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
 }
 
-.dgg-badge-icon {
+.chcr-badge-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-.dgg-badge-icon svg {
+.chcr-badge-icon svg {
   display: block;
 }
 
@@ -780,7 +780,7 @@
     padding-top: 14px !important;
     margin-top: 14px !important;
   }
-  .dgg-verified-banner {
+  .chcr-verified-banner {
     background: #ecfdf5 !important;
     border: 1px solid #10b981 !important;
     color: #065f46 !important;

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Studio - QR Biodata & Profile Manager</title>
+  
+  <!-- Google Fonts Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/base.css?v=7.6">
+  <link rel="stylesheet" href="css/admin.css?v=7.6">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ========================================================
+       1. SECURE LOGIN GATE (Displayed before entering dashboard)
+       ======================================================== -->
+  <div class="login-gate-overlay" id="loginGateOverlay">
+    <div class="login-card" id="loginCard">
+      <div class="login-lock-icon">🔒</div>
+      <h2 class="login-title">Admin Access</h2>
+      <p class="login-subtitle">Enter your credentials to manage biodata records and QR codes</p>
+
+      <div class="login-error-msg" id="loginErrorMsg">
+        Incorrect username or password. Please try again.
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group" style="text-align: left;">
+          <label for="loginUsername">Admin Username</label>
+          <input type="text" id="loginUsername" class="form-control" placeholder="Enter username" required autocomplete="username">
+        </div>
+
+        <div class="form-group" style="text-align: left; margin-bottom: 24px;">
+          <label for="loginPassword">Password</label>
+          <div class="password-input-wrap">
+            <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+            <button type="button" class="toggle-password-btn" id="btnTogglePassword" title="Show / Hide Password">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+          🔓 Unlock Studio Dashboard
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       2. MAIN ADMIN DASHBOARD (Hidden until logged in)
+       ======================================================== -->
+  <div class="admin-layout" id="adminApp" style="display: none;">
+    
+    <!-- Top Navigation Bar -->
+    <header class="glass-panel admin-navbar">
+      <div class="brand">
+        <div class="brand-icon">📋</div>
+        <div class="brand-text">
+          <h1>Running Room Biodata Admin</h1>
+          <p>DGG Running Room &bull; SECR</p>
+        </div>
+      </div>
+
+      <div class="admin-nav-actions">
+        <!-- GitHub Status Pill -->
+        <div id="ghStatusBadge" class="badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">
+          <span>●</span> GitHub Not Connected
+        </div>
+
+        <button id="btnOpenSettings" class="btn btn-secondary btn-sm" type="button">
+          🔑 GitHub Access Key
+        </button>
+
+        <a id="navViewProfileBtn" href="https://adityapandapersonal.github.io/running_room_biodata_chacher/index.html" target="_blank" class="btn btn-secondary btn-sm">
+          👁️ View Public Page
+        </a>
+
+        <!-- Logout Button -->
+        <button id="btnLogout" class="btn btn-secondary btn-sm" type="button" style="color: #fb7185; border-color: rgba(244, 63, 94, 0.3);" title="Lock Dashboard">
+          🚪 Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Studio Grid -->
+    <main class="admin-grid">
+
+      <!-- Left Column: Form Builder -->
+      <div class="admin-form-col">
+
+        <!-- Mode Switcher (New vs Edit) -->
+        <div class="mode-tabs">
+          <button id="tabModeNew" class="mode-tab active" type="button">
+            ➕ Add New Person
+          </button>
+          <button id="tabModeEdit" class="mode-tab" type="button">
+            ✏️ Edit Existing Person
+          </button>
+        </div>
+
+        <!-- Edit Profile Selector (Visible only in Edit mode) -->
+        <div id="editSelectorSection" class="glass-panel form-section" style="display: none; border-color: var(--accent-primary);">
+          <div class="form-group" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label for="selectExistingPerson" style="margin: 0; font-weight: 600;">Choose Person to Edit:</label>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="autoSyncBadge" style="font-size: 0.76rem; color: var(--accent-secondary); font-weight: 600;">⚡ Instant Auto-Fill</span>
+                <button id="btnRefreshRegistry" type="button" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.78rem;" title="Reload profile list from GitHub">
+                  🔄 Refresh List
+                </button>
+              </div>
+            </div>
+            <div>
+              <select id="selectExistingPerson" class="form-control" style="font-weight: 600; cursor: pointer;">
+                <option value="">-- Choose a person to edit --</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <form id="biodataForm" novalidate>
+
+          <!-- Section 1: Unique ID & Link Setup -->
+          <div class="glass-panel form-section">
+            <div class="form-section-header">
+              <h3><span>🆔</span> Permanent Identifier & Slug</h3>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="personId">Person Unique ID / Slug *</label>
+                <input type="text" id="personId" class="form-control" placeholder="e.g. rahul-sharma-101" required>
+              </div>
+
+              <div class="form-group">
+                <label>Permanent URL Preview</label>
+                <div class="permalink-box" id="livePermalinkPreview" style="margin: 0;">https://.../index.html?id=...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Photo & Signature Upload -->
+          <div class="glass-panel form-section">
+            <div class="form-section-header">
+              <h3><span>📷</span> Employee Photo & Signature</h3>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+              <!-- 1. Employee Photo Upload Area -->
+              <div class="photo-upload-container" style="border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); padding: 16px;">
+                <div class="photo-preview-circle">
+                  <img id="photoPreviewImg" class="photo-preview-img" src="assets/photos/demo-aditya.svg" alt="Preview">
+                </div>
+                <div class="photo-upload-actions">
+                  <div style="font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Employee Photo</div>
+                  <label for="photoFileInput" class="btn btn-secondary btn-sm" style="cursor: pointer; margin-bottom: 6px;">
+                    📷 Choose / Capture Photo
+                  </label>
+                  <input type="file" id="photoFileInput" accept="image/*" style="display: none;">
+                  <input type="hidden" id="existingPhotoPath" value="assets/photos/demo-aditya.svg">
+                </div>
+              </div>
+
+              <!-- 2. Employee Signature Upload Area -->
+              <div style="border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="font-weight: 600; color: var(--text-primary);">Signature of Employee</div>
+                    <span style="font-size: 0.72rem; color: var(--accent-secondary); font-weight: 600;">Camera / File</span>
+                  </div>
+                  <!-- Signature Preview Box -->
+                  <div style="background: #ffffff; border-radius: var(--radius-md); padding: 10px; display: flex; justify-content: center; align-items: center; min-height: 80px; margin-bottom: 10px; border: 1px solid #cbd5e1;">
+                    <img id="signaturePreviewImg" src="assets/signatures/sample-signature.svg" alt="Signature Preview" style="max-height: 70px; max-width: 100%; object-fit: contain;">
+                  </div>
+                </div>
+                <div>
+                  <label for="signatureFileInput" class="btn btn-secondary btn-sm" style="cursor: pointer; width: 100%; text-align: center; display: block; margin-bottom: 4px;">
+                    ✍️ Photo Khichke / Upload Sign
+                  </label>
+                  <input type="file" id="signatureFileInput" accept="image/*" capture="environment" style="display: none;">
+                  <input type="hidden" id="existingSignaturePath" value="assets/signatures/sample-signature.svg">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Official Running Room Particulars (18 Fields) -->
+          <div class="glass-panel form-section">
+            <div class="form-section-header">
+              <h3><span>📋</span> Running Room Employee Particulars</h3>
+            </div>
+
+            <!-- Row 1: ID Card No, Name, Designation -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="idCardNo">ID CARD NO. *</label>
+                <input type="text" id="idCardNo" class="form-control" placeholder="e.g. RR/DGG/2024/0826" required>
+              </div>
+
+              <div class="form-group">
+                <label for="fullName">Name *</label>
+                <input type="text" id="fullName" class="form-control" placeholder="e.g. Rajesh Kumar" required>
+              </div>
+
+              <div class="form-group">
+                <label for="designation">Designation *</label>
+                <input type="text" id="designation" class="form-control" placeholder="e.g. Loco Pilot / Sr. ALP" required>
+              </div>
+            </div>
+
+            <!-- Row 2: Father's Name, Mother's Name, Husband's Name -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fatherName">Father's Name</label>
+                <input type="text" id="fatherName" class="form-control" placeholder="e.g. Mr. Natwar Panda">
+              </div>
+
+              <div class="form-group">
+                <label for="motherName">Mother's Name</label>
+                <input type="text" id="motherName" class="form-control" placeholder="e.g. Smt. Anusuya Panda">
+              </div>
+
+              <div class="form-group">
+                <label for="husbandName">Husband's Name <small style="color: var(--text-muted);">(if applicable)</small></label>
+                <input type="text" id="husbandName" class="form-control" placeholder="Husband's name if married female">
+              </div>
+            </div>
+
+            <!-- Row 3: DOB, Gender, Marital Status, Blood Group -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" class="form-control">
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="maritalStatus">Marital Status</label>
+                <select id="maritalStatus" class="form-control">
+                  <option value="">Select Marital Status</option>
+                  <option value="Unmarried">Unmarried</option>
+                  <option value="Married">Married</option>
+                  <option value="Widowed">Widowed</option>
+                  <option value="Divorced">Divorced</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="bloodGroup">Blood Group</label>
+                <select id="bloodGroup" class="form-control">
+                  <option value="">Select Blood Group</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Row 4: Aadhaar Number, Mobile Number, Email -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="aadhaarNumber">Aadhaar Number</label>
+                <input type="text" id="aadhaarNumber" class="form-control" placeholder="e.g. 1234 5678 9012">
+              </div>
+
+              <div class="form-group">
+                <label for="mobileNumber">Mobile Number *</label>
+                <input type="tel" id="mobileNumber" class="form-control" placeholder="e.g. 9752443199" required>
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email ID</label>
+                <input type="email" id="email" class="form-control" placeholder="e.g. pandasd08@gmail.com">
+              </div>
+            </div>
+
+            <!-- Row 5: Residential Address -->
+            <div class="form-group">
+              <label for="residentialAddress">Residential Address</label>
+              <textarea id="residentialAddress" class="form-control" rows="2" placeholder="Full residential / postal address..."></textarea>
+            </div>
+
+            <!-- Row 6: Police Verification Dates -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="policeVerifDoneDate">Police Verif. Done Date</label>
+                <input type="date" id="policeVerifDoneDate" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="policeVerifDueDate">Police Verif. Due Date</label>
+                <input type="date" id="policeVerifDueDate" class="form-control">
+              </div>
+            </div>
+
+            <!-- Row 7: Medical Exam Dates -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="medicalExamDoneDate">Medical Exam. Done Date</label>
+                <input type="date" id="medicalExamDoneDate" class="form-control">
+              </div>
+
+              <div class="form-group">
+                <label for="medicalExamDueDate">Medical Exam. Due Date</label>
+                <input type="date" id="medicalExamDueDate" class="form-control">
+              </div>
+            </div>
+
+            <!-- Row 8: Identification Marks & Date of Joining in RR -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="identificationMarks">Identification Marks</label>
+                <input type="text" id="identificationMarks" class="form-control" placeholder="e.g. A mole on left forehead, cut mark on wrist">
+              </div>
+
+              <div class="form-group">
+                <label for="joiningDateRR">Date of Joining in RR</label>
+                <input type="date" id="joiningDateRR" class="form-control">
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Section 4: Dynamic Custom Particulars (Pencil Details Adder) -->
+          <div class="glass-panel form-section" id="customDetailsSection">
+            <div class="form-section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3><span>✏️</span> Custom Details / अतिरिक्त विवरण</h3>
+              <button type="button" id="btnAddCustomField" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                <span style="font-size: 1rem;">✏️</span> <span>+ Add Custom Field</span>
+              </button>
+            </div>
+            
+            <!-- Dynamic Custom Fields Container -->
+            <div id="customFieldsList">
+              <!-- Dynamically populated rows -->
+            </div>
+          </div>
+
+          <!-- Submit Action Area -->
+          <div style="margin-top: 24px; display: flex; gap: 14px; flex-wrap: wrap;">
+            <button id="btnSubmitForm" type="submit" class="btn btn-primary btn-lg" style="flex: 2; min-width: 220px;">
+              <span id="btnSubmitText">💾 Save & Commit to GitHub</span>
+            </button>
+            <button id="btnDeletePerson" type="button" class="btn btn-secondary btn-lg" style="display: none; background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer;" title="Delete selected person from repository">
+              🗑️ Delete Person
+            </button>
+            <button id="btnResetForm" type="button" class="btn btn-secondary btn-lg" style="flex: 1; min-width: 130px;">
+              Reset Form
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Right Column: Live QR Code Studio -->
+      <aside class="admin-sidebar">
+        
+        <div class="glass-panel qr-studio-card">
+          <h2 style="font-size: 1.25rem; margin-bottom: 12px;">Permanent QR Code</h2>
+
+          <!-- The Live QR Code Card Preview (With safe padding & employee name) -->
+          <div class="qr-preview-card" id="adminQrCardPreview">
+            <div class="qr-canvas-box" id="adminQrCanvas"></div>
+            <div class="qr-name-tag" id="adminQrNameDisplay">Employee Name</div>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">
+            Permanent Target Link:
+          </div>
+          <div class="permalink-box" id="adminPermalinkDisplay">https://...</div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button id="btnDownloadQr" class="btn btn-primary" type="button">
+              📥 Download QR Code (PNG)
+            </button>
+            <button id="btnCopyLink" class="btn btn-secondary btn-sm" type="button">
+              📋 Copy Permanent URL
+            </button>
+            <a id="btnTestLiveProfile" href="index.html" target="_blank" class="btn btn-secondary btn-sm">
+              🚀 Open Profile Page
+            </a>
+          </div>
+        </div>
+
+      </aside>
+
+    </main>
+  </div>
+
+  <!-- Modal for GitHub PAT Settings -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="glass-panel modal-content">
+      <button class="modal-close" id="btnCloseSettingsModal" type="button">&times;</button>
+      
+      <h2 style="font-size: 1.4rem; margin-bottom: 8px;">🔑 GitHub Access Token Setup</h2>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 18px;">
+        GitHub repository synchronization credentials.
+      </p>
+
+      <div class="form-group">
+        <label for="cfgUsername">GitHub Username / Owner *</label>
+        <input type="text" id="cfgUsername" class="form-control" placeholder="e.g. aditya-panda">
+      </div>
+
+      <div class="form-group">
+        <label for="cfgRepo">Repository Name *</label>
+        <input type="text" id="cfgRepo" class="form-control" placeholder="e.g. biodata-qr-system">
+      </div>
+
+      <div class="form-group">
+        <label for="cfgBranch">Branch</label>
+        <input type="text" id="cfgBranch" class="form-control" value="main">
+      </div>
+
+      <div class="form-group">
+        <label for="cfgToken">Personal Access Token (PAT) *</label>
+        <input type="password" id="cfgToken" class="form-control" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button id="btnSaveGithubSettings" class="btn btn-primary" type="button" style="flex: 1;">
+          Connect & Verify Token
+        </button>
+        <button id="btnClearToken" class="btn btn-secondary" type="button">
+          Disconnect
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================
+       3. LIVE COMMIT PROGRESS MODAL (Checkpoints & Live Status)
+       ======================================================== -->
+  <div class="progress-modal-backdrop" id="progressModal">
+    <div class="glass-panel progress-card">
+      <div class="progress-header">
+        <div class="progress-header-icon">⚡</div>
+        <div>
+          <h3 id="progressModalTitle">Synchronizing with GitHub</h3>
+          <p id="progressModalSubtitle">Real-time commit & pipeline progress</p>
+        </div>
+      </div>
+
+      <div class="progress-steps-list">
+        <!-- Step 1: Validation -->
+        <div class="progress-step-item" id="pstep-validate">
+          <div class="step-status-icon">⚪</div>
+          <div class="step-info">
+            <div class="step-title">1. Validating Profile Details</div>
+            <div class="step-desc">Checking required fields and slug formatting</div>
+          </div>
+        </div>
+
+        <!-- Step 2: Photo Encoding (Base64) & Upload -->
+        <div class="progress-step-item" id="pstep-photo">
+          <div class="step-status-icon">⚪</div>
+          <div class="step-info">
+            <div class="step-title">2. Processing & Uploading Photo</div>
+            <div class="step-desc">Converting to Base64 and committing to assets/photos/</div>
+          </div>
+        </div>
+
+        <!-- Step 3: JSON Commit -->
+        <div class="progress-step-item" id="pstep-json">
+          <div class="step-status-icon">⚪</div>
+          <div class="step-info">
+            <div class="step-title">3. Committing Biodata JSON</div>
+            <div class="step-desc">Writing record to data/profiles/{id}.json</div>
+          </div>
+        </div>
+
+        <!-- Step 4: Registry Update -->
+        <div class="progress-step-item" id="pstep-registry">
+          <div class="step-status-icon">⚪</div>
+          <div class="step-info">
+            <div class="step-title">4. Synchronizing Registry Index</div>
+            <div class="step-desc">Updating data/registry.json for quick switcher</div>
+          </div>
+        </div>
+
+        <!-- Step 5: Dynamic QR Finalization -->
+        <div class="progress-step-item" id="pstep-qr">
+          <div class="step-status-icon">⚪</div>
+          <div class="step-info">
+            <div class="step-title">5. Permanent QR Code Active</div>
+            <div class="step-desc">Permanent URL activated on GitHub Pages</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Error Box if failure -->
+      <div class="progress-error-box" id="progressErrorBox" style="display: none;">
+        <span id="progressErrorText">Error message here</span>
+      </div>
+
+      <!-- Success Footer (Shown when all done) -->
+      <div class="progress-footer" id="progressFooter" style="display: none;">
+        <div class="progress-success-pill">
+          🎉 All Changes Committed & Live!
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 14px;">
+          <a id="btnProgressViewProfile" href="#" target="_blank" class="btn btn-primary" style="flex: 1;">
+            🚀 Open Live Profile
+          </a>
+          <button id="btnCloseProgressModal" type="button" class="btn btn-secondary">
+            Done & Close
+          </button>
+        </div>
+      </div>
+
+      <!-- Cancel / Close button for error state -->
+      <div id="progressErrorActions" style="display: none; margin-top: 16px;">
+        <button id="btnCloseProgressModalErr" type="button" class="btn btn-secondary" style="width: 100%;">
+          Close & Fix Details
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Scripts with Cache Busting -->
+  <script src="assets/vendor/qrcode.min.js?v=7.6"></script>
+  <script src="js/config.js?v=7.6"></script>
+  <script src="js/github-api.js?v=7.6"></script>
+  <script src="js/admin.js?v=7.6"></script>
+</body>
+</html>

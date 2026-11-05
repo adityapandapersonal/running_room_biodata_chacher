@@ -1,0 +1,14 @@
+{
+  "profiles": [
+    {
+      "id": "demo-aditya",
+      "idCardNo": "RR/BSP/2024/0101",
+      "fullName": "Aditya Panda",
+      "designation": "Chief Loco Inspector / Creator",
+      "phone": "+91 98765 43210",
+      "photo": "assets/photos/demo-aditya.svg",
+      "signature": "assets/signatures/sample-signature.svg",
+      "updatedAt": "2026-10-26"
+    }
+  ]
+}
